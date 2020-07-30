@@ -1,2 +1,2 @@
 # RustyDaysHackathon
-Rusty Days - Virtual Rust Conference Hackaton
+Rusty Days - Virtual Rust Conference Hackathon
