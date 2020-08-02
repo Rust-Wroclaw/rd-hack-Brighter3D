@@ -19,6 +19,7 @@ use std::sync::mpsc::{channel, TryRecvError};
 
 use std::time::{Duration, Instant};
 
+
 pub enum TextureId {
     ZERO,
     ONE,
@@ -44,10 +45,10 @@ gfx_defines! {
         i_resolution: gfx::Global<[f32; 3]> = "iResolution",
         i_mouse: gfx::Global<[f32; 4]> = "iMouse",
         i_frame: gfx::Global<i32> = "iFrame",
-        i_channel0: gfx::TextureSampler<[f32; 4]> = "iChannel0",
-        i_channel1: gfx::TextureSampler<[f32; 4]> = "iChannel1",
-        i_channel2: gfx::TextureSampler<[f32; 4]> = "iChannel2",
-        i_channel3: gfx::TextureSampler<[f32; 4]> = "iChannel3",
+        //i_channel0: gfx::TextureSampler<[f32; 4]> = "iChannel0",
+        //i_channel1: gfx::TextureSampler<[f32; 4]> = "iChannel1",
+        //i_channel2: gfx::TextureSampler<[f32; 4]> = "iChannel2",
+        //i_channel3: gfx::TextureSampler<[f32; 4]> = "iChannel3",
 
         // Output color
         frag_color: gfx::RenderTarget<ColorFormat> = "fragColor",
@@ -135,10 +136,11 @@ pub fn run(av: &ArgValues) -> error::Result<()> {
         factory.create_vertex_buffer_with_slice(&SCREEN, &SCREEN_INDICES[..]);
 
     // Load textures
-    let texture0 = loader::load_texture(&TextureId::ZERO , &av.texture0path, &mut factory)?;
-    let texture1 = loader::load_texture(&TextureId::ONE  , &av.texture1path, &mut factory)?;
-    let texture2 = loader::load_texture(&TextureId::TWO  , &av.texture2path, &mut factory)?;
-    let texture3 = loader::load_texture(&TextureId::THREE, &av.texture3path, &mut factory)?;
+
+    //let texture0 = loader::load_texture(&TextureId::ZERO , &av.texture0path, &mut factory)?;
+    //let texture1 = loader::load_texture(&TextureId::ONE  , &av.texture1path, &mut factory)?;
+    //let texture2 = loader::load_texture(&TextureId::TWO  , &av.texture2path, &mut factory)?;
+    //let texture3 = loader::load_texture(&TextureId::THREE, &av.texture3path, &mut factory)?;
 
     let sampler = factory.create_sampler_linear();
 
@@ -151,10 +153,10 @@ pub fn run(av: &ArgValues) -> error::Result<()> {
         i_mouse: [0.0; 4],
         i_frame: -1,
 
-        i_channel0: (texture0, sampler.clone()),
-        i_channel1: (texture1, sampler.clone()),
-        i_channel2: (texture2, sampler.clone()),
-        i_channel3: (texture3, sampler.clone()),
+       // i_channel0: (texture0, sampler.clone()),
+        ///i_channel1: (texture0, sampler.clone()),
+        //i_channel2: (texture0, sampler.clone()),
+        //i_channel3: (texture0, sampler.clone()),
 
         frag_color: main_color,
     };

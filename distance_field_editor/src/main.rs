@@ -15,10 +15,8 @@ mod loader;
 mod error;
 
 use std::string::String;
-
 use std::thread;
 use std::str;
-
 use argvalues::ArgValues;
 
 fn main_shader() {
@@ -41,9 +39,6 @@ use nuklear_backend_gfx::{Drawer, GfxBackend};
 
 use glutin::GlRequest;
 use glutin::dpi::{LogicalSize, LogicalPosition};
-
-use std::fs::*;
-use std::io::BufReader;
 
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
@@ -162,18 +157,6 @@ impl Drop for Media {
             self.font_tex = ::std::mem::zeroed();
         }
     }
-}
-
-fn icon_load<F, R: gfx::Resources>(factory: &mut F, drawer: &mut Drawer<R>, filename: &str) -> Image
-where
-    F: gfx::Factory<R>,
-{
-    let img = image::load(BufReader::new(File::open(filename).unwrap()), image::PNG).unwrap().to_rgba();
-
-    let (w, h) = img.dimensions();
-    let mut hnd = drawer.add_texture(factory, &img, w, h);
-
-    Image::with_id(hnd.id().unwrap())
 }
 
 fn generate_shader(spheres:&mut Vec<SphereState>)->String {
@@ -377,7 +360,6 @@ fn main_gui() {
             ActionState::AddSphere     => { spheres.push(SphereState::new(&mut sphere_uid)); },
             ActionState::CompileShader => { println!("{}", generate_shader(&mut spheres)); },
             ActionState::None          => {},
-            _ => {},            
         }
       
         let mut remove_id = -1;
@@ -481,6 +463,7 @@ fn sphere_demo(ctx: &mut Context, media: &mut Media, state: &mut SphereState)->b
     ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
     ctx.layout_row_dynamic(30f32, 2);
     ctx.text("X:", TextAlignment::Right as Flags);
+    
     ctx.edit_string(EditType::Field as Flags, &mut state.x.text, &mut state.x.text_len, NK_FILTER_FLOAT);
     ctx.text("Y:", TextAlignment::Right as Flags);
     ctx.edit_string(EditType::Field as Flags, &mut state.y.text, &mut state.y.text_len, NK_FILTER_FLOAT);
