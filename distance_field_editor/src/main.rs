@@ -26,10 +26,10 @@ fn main_shader() {
 } 
 
 fn main() {
-    //thread::spawn(|| {
-      //  main_shader();
-    //});
-    main_shader();
+    thread::spawn(|| {
+        main_shader();
+    });
+    //main_shader();
     main_gui();
 }
 
@@ -52,6 +52,7 @@ const MAX_VERTEX_MEMORY: usize = 512 * 1024;
 const MAX_ELEMENT_MEMORY: usize = 128 * 1024;
 const MAX_COMMANDS_MEMORY: usize = 64 * 1024;
 
+
 struct BasicState {
     image_active: bool,
     check0: bool,
@@ -72,6 +73,7 @@ struct ButtonState {
     toggle2: bool,
 }
 
+#[derive(Clone)]
 struct NuclearFloat {
     text: [u8; 64],
     text_len: i32,
@@ -104,14 +106,32 @@ impl NuclearFloat {
     }
 }
 
+#[derive(Clone)]
 struct SphereState {
     red  : i32,
     green: i32,
     blue : i32,
+    id : i32,
     x: NuclearFloat,
     y: NuclearFloat,
     z: NuclearFloat,
     radius: NuclearFloat,
+}
+
+impl SphereState {
+    fn new(id: &mut usize)->Self {
+        *id+=1;
+        SphereState {
+            red  : 255,
+            green: 255,
+            blue : 255,
+            id : *id as i32,
+            x: NuclearFloat::from_val(0.0),
+            y: NuclearFloat::from_val(2.0),
+            z: NuclearFloat::from_val(0.0),
+            radius: NuclearFloat::from_val(10.0),
+        }   
+    }
 }
 
 struct GridState {
@@ -172,11 +192,14 @@ where
     Image::with_id(hnd.id().unwrap())
 }
 
+
+
 fn main_gui() {
     let gl_version = GlRequest::GlThenGles {
         opengles_version: (2, 0),
         opengl_version: (3, 3),
     };
+
 
     let builder = glutin::WindowBuilder::new().with_title("Distance Field Editor").
             with_dimensions(LogicalSize { width: 920., height: 1000. });
@@ -293,16 +316,37 @@ fn main_gui() {
         toggle2: true,
     };
 
+    /*
     let mut sphere_state = SphereState {
         red: 255,
         green: 255,
         blue: 0,    
+        id : 0,
         x: NuclearFloat::from_val(0.0),
         y: NuclearFloat::from_val(1.0),
         z: NuclearFloat::from_val(2.0),
         radius: NuclearFloat::from_val(10.0),
     };
 
+    let mut sphere_state2 = SphereState {
+        red: 255,
+        green: 255,
+        blue: 255,    
+        id : 1,
+        x: NuclearFloat::from_val(3.0),
+        y: NuclearFloat::from_val(2.0),
+        z: NuclearFloat::from_val(1.0),
+        radius: NuclearFloat::from_val(20.0),
+    };
+    */
+
+    let mut spheres = vec![];
+    
+    let mut sphere_uid = 0;
+    
+    spheres.push(SphereState::new(&mut sphere_uid));
+    
+/*
     let mut grid_state = GridState {
         text: [[0; 64]; 4],
         text_len: [0; 4],
@@ -310,7 +354,7 @@ fn main_gui() {
         selected_item: 2,
         check: true,
     };
-
+*/
     let mut mx = 0;
     let mut my = 0;
 
@@ -322,8 +366,6 @@ fn main_gui() {
     config.set_global_alpha(1.0f32);
     config.set_shape_aa(AntiAliasing::On);
     config.set_line_aa(AntiAliasing::On);
-
-    let mut ii = 0i64;
 
     let mut closed = false;
     while !closed {
@@ -391,15 +433,26 @@ fn main_gui() {
         // println!("{:?}", event);
         let LogicalSize { width, height } = window.get_inner_size().unwrap();
         let scale = Vec2 { x: 1., y: 1. };
+        //let mut te = SphereState::new(spheres.len());
 
-        basic_demo(&mut ctx, &mut media, &mut basic_state);
+        if basic_demo(&mut ctx, &mut media, &mut basic_state) {            
+            spheres.push(SphereState::new(&mut sphere_uid));
+        }
+      
+        let mut remove_id = -1;
 
-        //if (ii/100)%2==1 {
-        //button_demo(&mut ctx, &mut media, &mut button_state);
-        //}
-        sphere_demo(&mut ctx, &mut media, &mut sphere_state);
-        ii+=1;
-        grid_demo(&mut ctx, &mut media, &mut grid_state);
+        for i in 0..spheres.len() {            
+            if sphere_demo(&mut ctx, &mut media, &mut spheres[i]) {
+                remove_id = i as i32;
+            }
+        }
+
+        if remove_id!=-1 {
+            spheres.remove(remove_id as usize);
+        }
+        
+        //grid_demo(&mut ctx, &mut media, &mut grid_state);
+        
 
         encoder.clear(drawer.col.as_ref().unwrap(), [0.1f32, 0.2f32, 0.3f32, 1.0f32]);
         drawer.draw(&mut ctx, &mut config, &mut encoder, &mut factory, width as u32, height as u32, scale);
@@ -588,13 +641,31 @@ fn button_demo(ctx: &mut Context, media: &mut Media, state: &mut ButtonState) {
     ctx.end();
 }
 
-fn basic_demo(ctx: &mut Context, media: &mut Media, state: &mut BasicState) {
+fn basic_demo(ctx: &mut Context, media: &mut Media, state: &mut BasicState)->bool {
     ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
     ctx.begin(
-        nk_string!("Basic Nuklear Rust!"),
+        nk_string!("Control Panel"),
         Rect { x: 320f32, y: 50f32, w: 275f32, h: 610f32 },
         PanelFlags::Border as Flags | PanelFlags::Movable as Flags | PanelFlags::Title as Flags,
     );
+
+
+    ui_header(ctx, media, "Create");
+    ui_widget(ctx, media, 35f32);
+
+    let mut add_sphere = false;
+
+    if ctx.button_text("Sphere") {
+        add_sphere = true;
+    }
+    ctx.end();
+
+    add_sphere
+
+/*
+    ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
+    ctx.end();
+
 
     // ------------------------------------------------
     //                  POPUP BUTTON
@@ -694,6 +765,7 @@ fn basic_demo(ctx: &mut Context, media: &mut Media, state: &mut BasicState) {
     }
     ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
     ctx.end();
+    */
 }
 
 // ===============================================================
@@ -820,19 +892,15 @@ fn ui_piemenu(ctx: &mut Context, pos: Vec2, radius: f32, icons: &[Image]) -> i32
 }
 
 
-fn sphere_demo(ctx: &mut Context, media: &mut Media, state: &mut SphereState) {
+fn sphere_demo(ctx: &mut Context, media: &mut Media, state: &mut SphereState)->bool {
     ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
 
-    ctx.begin(
-        nk_string!("Sphere"),
-        Rect { x: 50f32, y: 50f32, w: 255f32, h: 610f32 },
-        PanelFlags::Border as Flags | PanelFlags::Movable as Flags | PanelFlags::Title as Flags,
-
-        
+    let off = state.id as f32*10.0;
+    ctx.begin(        
+        nk_string!("Sphere{}",state.id),
+        Rect { x: 50f32+off, y: 50f32+off, w: 255f32, h: 410f32 },
+        PanelFlags::Border as Flags | PanelFlags::Movable as Flags | PanelFlags::Title as Flags,   
     );
-
-
-//    ctx.text("Position:", TextAlignment::Right as Flags);
 
     // ------------------------------------------------
     ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
@@ -1009,6 +1077,18 @@ fn sphere_demo(ctx: &mut Context, media: &mut Media, state: &mut SphereState) {
         ctx.contextual_end();
     }
     */
+
+    ui_header(ctx, media, "Remove");
+    ui_widget(ctx, media, 35f32);
+
+    let mut remove = false;
+
+    if ctx.button_text("Remove") {
+        remove = true;
+    }
+
     ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
     ctx.end();
+
+    remove
 }
