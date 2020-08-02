@@ -28,3 +28,6 @@ https://crates.io/crates/nuklear-rust
 ##### IQ shader:
 
 https://www.shadertoy.com/view/Xds3zN
+
+
+![screen](https://github.com/zsacul/RustyDaysHackathon/blob/master/distance_field_editor/images/shader.png)
