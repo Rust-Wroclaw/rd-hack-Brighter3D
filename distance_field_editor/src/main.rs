@@ -9,6 +9,8 @@ extern crate reqwest;
 extern crate failure;
 #[macro_use] extern crate failure_derive;
 
+//use std::sync::mpsc::{channel, TryRecvError};
+
 mod argvalues;
 mod runner;
 mod loader;
@@ -21,17 +23,63 @@ use std::str;
 use argvalues::ArgValues;
 
 
+//use std::sync::mpsc;
+//use std::thread;
+
+//use std::sync::mpsc;
+//use std::thread;
+//use std::time::Duration;
+
+fn main() {
+    //let (tx, rx) = mpsc::channel();
+
+    /*
+    thread::spawn(move || {
+        let vals = vec![
+            String::from("hi"),
+            String::from("from"),
+            String::from("the"),
+            String::from("thread"),
+        ];
+
+        for val in vals {
+            tx.send(val).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+*/
+    //for received in rx {
+      //  println!("Got: {}", received);
+    //}
+
+    thread::spawn(|| {
+        //tx.send("hi").unwrap();
+        //let _res = runner::run(&ArgValues::new());
+        main_shader();
+    });    
+
+    main_gui();
+}
+
+/*
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+//    let (tx,rx) = mpsc::channel::<i32>();
+
+  //  thread::spawn(move || {
+    //    main_shader();
+    //});
+    //main_shader();
+    //main_gui();
+}
+*/
+
 fn main_shader() {
     let _res = runner::run(&ArgValues::new());
 } 
 
-fn main() {
-    thread::spawn(|| {
-        main_shader();
-    });
-    //main_shader();
-    main_gui();
-}
+
 
 extern crate nuklear;
 extern crate nuklear_backend_gfx;
@@ -362,7 +410,9 @@ fn main_gui() {
             ActionState::AddSphere     => { spheres.push(SphereState::new(&mut sphere_uid)); },
             ActionState::CompileShader => { let inner_shader = generate_shader(&mut spheres); 
                                             let s = loader::generate_shader_from_template(inner_shader);    
-                                            println!("{}",s); 
+                                            let _res = loader::save_to_file("./shaders/default2.frag", s);
+                                            
+                                            //println!("{}",s); 
                                           },
             ActionState::None          => {},
         }

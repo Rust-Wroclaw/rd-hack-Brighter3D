@@ -29,7 +29,7 @@ impl ArgValues {
             height: 1000.0,
         
             // None if using default fragment shader
-            shaderpath: None,
+            shaderpath: Some(String::from("./shaders/default.frag")),
         
             // None if using default textures
             texture0path: None,
