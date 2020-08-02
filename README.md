@@ -3,7 +3,7 @@ My entry for Rusty Days - Virtual Rust Conference Hackathon
 
 Distance field based spheres raymarching rendering shader generator
 
-![screen](https://github.com/zsacul/RustyDaysHackathon/images/distance_field_editor.png)
+![screen](https://github.com/zsacul/RustyDaysHackathon/blob/master/distance_field_editor/images/preview.png)
 
 Source code used:
 
