@@ -318,8 +318,10 @@ vec2 map( in vec3 pos )
     vec2 res = vec2( 1e10, 0.0 );
 
     {
- res = opU( res, vec2( sdSphere(    pos-vec3(0,0.3,0.3), 0.2 ), 16638924 ) );
- res = opU( res, vec2( sdSphere(    pos-vec3(0,0.7,0), 0.4 ), 16777315 ) );
+ res = opU( res, vec2( sdSphere(pos-vec3(0,0.4,0), 0.4 ), 16777240 ) );
+ res = opU( res, vec2( sdSphere(pos-vec3(0.3,0.7,0), 0.2 ), 16777094 ) );
+ res = opU( res, vec2( sdSphere(pos-vec3(-0.3,0.7,0), 0.2 ), 16777131 ) );
+ res = opU( res, vec2( sdSphere(pos-vec3(0,0.7,-0.3), 0.080000006 ), 16728420 ) );
 
 
 /*      res = opU( res, vec2( sdSphere(    pos-vec3(-2.0,0.25, 0.0), 0.25 ), 26.9 ) );
@@ -391,6 +393,7 @@ vec2 raycast( in vec3 ro, in vec3 rd )
     //else return res;
     
     // raymarch primitives   
+    //vec2 tb = iBox( ro-vec3(0.0,0.4,-0.5), rd, vec3(2.5,0.41,3.0) );
     vec2 tb = iBox( ro-vec3(0.0,0.4,-0.5), rd, vec3(12.5,10.41,30.0) );
     if( tb.x<tb.y && tb.y>0.0 && tb.x<tmax)
     {

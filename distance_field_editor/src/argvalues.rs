@@ -5,12 +5,6 @@ pub struct ArgValues {
     // None if using default fragment shader
     pub shaderpath: Option<String>,
 
-    // None if using default textures
-    pub texture0path: Option<String>,
-    pub texture1path: Option<String>,
-    pub texture2path: Option<String>,
-    pub texture3path: Option<String>,
-
     // Some(name) if running an example
     pub examplename: Option<String>,
 
@@ -30,13 +24,7 @@ impl ArgValues {
         
             // None if using default fragment shader
             shaderpath: Some(String::from("./shaders/default.frag")),
-        
-            // None if using default textures
-            texture0path: None,
-            texture1path: None,
-            texture2path: None,
-            texture3path: None,
-        
+              
             // Some(name) if running an example
             examplename: None,
         

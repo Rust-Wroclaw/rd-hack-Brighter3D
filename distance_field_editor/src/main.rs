@@ -9,77 +9,28 @@ extern crate reqwest;
 extern crate failure;
 #[macro_use] extern crate failure_derive;
 
-//use std::sync::mpsc::{channel, TryRecvError};
-
 mod argvalues;
 mod runner;
 mod loader;
 mod error;
-
 
 use std::string::String;
 use std::thread;
 use std::str;
 use argvalues::ArgValues;
 
-
-//use std::sync::mpsc;
-//use std::thread;
-
-//use std::sync::mpsc;
-//use std::thread;
-//use std::time::Duration;
-
 fn main() {
-    //let (tx, rx) = mpsc::channel();
-
-    /*
-    thread::spawn(move || {
-        let vals = vec![
-            String::from("hi"),
-            String::from("from"),
-            String::from("the"),
-            String::from("thread"),
-        ];
-
-        for val in vals {
-            tx.send(val).unwrap();
-            thread::sleep(Duration::from_secs(1));
-        }
-    });
-*/
-    //for received in rx {
-      //  println!("Got: {}", received);
-    //}
 
     thread::spawn(|| {
-        //tx.send("hi").unwrap();
-        //let _res = runner::run(&ArgValues::new());
         main_shader();
     });    
 
     main_gui();
 }
 
-/*
-fn main() {
-    let (tx, rx) = mpsc::channel();
-
-//    let (tx,rx) = mpsc::channel::<i32>();
-
-  //  thread::spawn(move || {
-    //    main_shader();
-    //});
-    //main_shader();
-    //main_gui();
-}
-*/
-
 fn main_shader() {
     let _res = runner::run(&ArgValues::new());
 } 
-
-
 
 extern crate nuklear;
 extern crate nuklear_backend_gfx;
@@ -125,12 +76,8 @@ impl NuclearFloat {
 
     fn update(&mut self)->f32
     {        
-        let st   = str::from_utf8(&self.text).unwrap_or("");
-        let stri = std::string::String::from(st);
-        //let mut i=0;
-        //while self.text[i]!=0 {i+=1;}
-        let vv = stri[..self.text_len as usize].parse::<f32>().unwrap();                            
-        self.val = vv;
+        let st   = str::from_utf8(&self.text).unwrap_or("");                    
+        self.val = st[..self.text_len as usize].parse::<f32>().unwrap();
         self.val
     }
 
@@ -162,7 +109,7 @@ impl SphereState {
             x: NuclearFloat::from_val(0.0),
             y: NuclearFloat::from_val(2.0),
             z: NuclearFloat::from_val(0.0),
-            radius: NuclearFloat::from_val(10.0),
+            radius: NuclearFloat::from_val(1.0),
         }   
     }
 
@@ -175,12 +122,12 @@ impl SphereState {
 
     fn get_shader(&self)->String {
 
-        let code:i32 = 256*256*self.red + 256*self.green + self.blue;
-        format!(" res = opU( res, vec2( sdSphere(    pos-vec3({},{},{}), {} ), {} ) );\n",
+        let code = 256.0*256.0*self.red as f32 + 256.0*self.green as f32 + self.blue as f32;
+        format!(" res = opU( res, vec2( sdSphere(pos-vec3({},{},{}), {} ), {} ) );\n",
                 self.x.val()*0.1,
                 self.y.val()*0.1,
                 self.z.val()*0.1,
-                self.radius.val()*0.1*0.5,
+                self.radius.val()*0.1*2.0,
                 code as f32+100.0)
     
     }
@@ -189,6 +136,7 @@ impl SphereState {
 enum ActionState {
     None,
     AddSphere,
+    //CopyShader,
     CompileShader
 }
 
@@ -291,40 +239,7 @@ fn main_gui() {
         font_tex: font_tex,
     };
 
-    /*
-    let mut button_state = ButtonState {
-        option: 1,
-        toggle0: true,
-        toggle1: false,
-        toggle2: true,
-    };
-*/
-    /*
-    let mut sphere_state = SphereState {
-        red: 255,
-        green: 255,
-        blue: 0,    
-        id : 0,
-        x: NuclearFloat::from_val(0.0),
-        y: NuclearFloat::from_val(1.0),
-        z: NuclearFloat::from_val(2.0),
-        radius: NuclearFloat::from_val(10.0),
-    };
-
-    let mut sphere_state2 = SphereState {
-        red: 255,
-        green: 255,
-        blue: 255,    
-        id : 1,
-        x: NuclearFloat::from_val(3.0),
-        y: NuclearFloat::from_val(2.0),
-        z: NuclearFloat::from_val(1.0),
-        radius: NuclearFloat::from_val(20.0),
-    };
-    */
-
     let mut spheres = vec![];
-    
     let mut sphere_uid = 0;
     
     spheres.push(SphereState::new(&mut sphere_uid));
@@ -411,11 +326,14 @@ fn main_gui() {
         match control_panel(&mut ctx, &mut media) {            
             ActionState::AddSphere     => { spheres.push(SphereState::new(&mut sphere_uid)); },
             ActionState::CompileShader => { let inner_shader = generate_shader(&mut spheres); 
-                                            let s = loader::generate_shader_from_template(inner_shader);    
-                                            let _res = loader::save_to_file("./shaders/default.frag", s);
-                                            
-                                            //println!("{}",s); 
-                                          },
+                let s = loader::generate_shader_from_template(inner_shader);    
+                let _res = loader::save_to_file("./shaders/default.frag", s);                                    
+              },
+            /*ActionState::CopyShader    => { 
+                let inner_shader = generate_shader(&mut spheres); 
+                let text = loader::generate_shader_from_template(inner_shader);                   
+                set_clipboard(formats::Unicode, text).expect("To set clipboard");            
+                },  */
             ActionState::None          => {},
         }
       
@@ -476,6 +394,14 @@ fn control_panel(ctx: &mut Context, media: &mut Media)->ActionState {
     }
 
     ui_header(ctx, media, "Shader");
+
+    /*
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_text("Copy to Clipboard") {
+        action = ActionState::CopyShader;
+    }
+    */
+
     ui_widget(ctx, media, 35f32);
     if ctx.button_text("Compile") {
         action = ActionState::CompileShader;
@@ -488,7 +414,7 @@ fn control_panel(ctx: &mut Context, media: &mut Media)->ActionState {
 fn sphere_demo(ctx: &mut Context, media: &mut Media, state: &mut SphereState)->bool {
     ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
 
-    let off = state.id as f32*10.0;
+    let off = (state.id-1) as f32*10.0;
     ctx.begin(        
         nk_string!("Sphere{}",state.id),
         Rect { x: 50f32+off, y: 50f32+off, w: 255f32, h: 410f32 },
