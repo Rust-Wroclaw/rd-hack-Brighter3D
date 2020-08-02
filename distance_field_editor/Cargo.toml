@@ -1,0 +1,30 @@
+[package]
+name = "distance_field_editor"
+version = "0.1.0"
+authors = ["zsacul <zsacul@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nuklear-rust = "0.6.2"
+nuklear-backend-gfx = "0.9.0"
+gfx_device_gl = "~0.16"
+gfx_window_glutin = "~0.30"
+gfx = "~0.18"
+glutin = "~0.20"
+image = "~0.12"
+#gfx = "0.17"
+#gfx_window_glutin = "0.21"
+#glutin = "0.13"
+clap = { version = "2.23.2", features = ["yaml"] }
+#image = "0.13"
+log = "0.3"
+env_logger = "0.3"
+serde_json = "1.0"
+notify = "4.0.3"
+reqwest = "~0.9"
+clippy = { version = "0.*", optional = true }
+failure = "0.1.1"
+failure_derive = "0.1.1"
+
