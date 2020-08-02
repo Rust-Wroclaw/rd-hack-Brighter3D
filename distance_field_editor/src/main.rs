@@ -101,7 +101,15 @@ impl NuclearFloat {
     fn update(&mut self)->f32
     {        
         let st   = str::from_utf8(&self.text).unwrap_or("");
-        self.val = std::string::String::from(st).parse::<f32>().unwrap_or(0.0);
+        let stri = std::string::String::from(st);
+        let mut i=0;
+        while self.text[i]!=0 {i+=1;}
+        let vv = stri[..i].parse::<f32>().unwrap();                            
+        self.val = vv;
+        self.val
+    }
+
+    fn val(&self)->f32 {
         self.val
     }
 }
@@ -132,7 +140,34 @@ impl SphereState {
             radius: NuclearFloat::from_val(10.0),
         }   
     }
+
+    fn update(&mut self){
+        self.x.update();
+        self.y.update();
+        self.z.update();
+        self.radius.update();
+    }
+
+    fn get_shader(&self)->String {
+
+        //self.x.update(),        
+        //res = opU( res, vec2( sdSphere(    pos-vec3(-2.0,0.25, 0.0), 0.25 ), 26.9 ) );
+
+        format!(" res = opU( res, vec2( sdSphere(    pos-vec3({},{},{}), {} ), 20.9 ) );\n",
+                self.x.val(),
+                self.y.val(),
+                self.z.val(),
+                self.radius.val())
+    
+    }
 }
+
+enum ActionState {
+    None,
+    AddSphere,
+    CompileShader
+}
+
 
 struct GridState {
     text: [[u8; 64]; 4],
@@ -192,6 +227,18 @@ where
     Image::with_id(hnd.id().unwrap())
 }
 
+fn generate_shader(spheres:&mut Vec<SphereState>)->String {
+    for s in spheres.iter_mut() {
+        s.update();
+    }
+    
+    let mut res = vec![];
+    
+    for s in spheres {
+        res.push(s.get_shader());
+    }
+    res.join("")
+}
 
 
 fn main_gui() {
@@ -309,13 +356,14 @@ fn main_gui() {
         piemenu_pos: Vec2::default(),
     };
 
+    /*
     let mut button_state = ButtonState {
         option: 1,
         toggle0: true,
         toggle1: false,
         toggle2: true,
     };
-
+*/
     /*
     let mut sphere_state = SphereState {
         red: 255,
@@ -433,10 +481,12 @@ fn main_gui() {
         // println!("{:?}", event);
         let LogicalSize { width, height } = window.get_inner_size().unwrap();
         let scale = Vec2 { x: 1., y: 1. };
-        //let mut te = SphereState::new(spheres.len());
 
-        if basic_demo(&mut ctx, &mut media, &mut basic_state) {            
-            spheres.push(SphereState::new(&mut sphere_uid));
+        match control_panel(&mut ctx, &mut media, &mut basic_state) {            
+            ActionState::AddSphere     => { spheres.push(SphereState::new(&mut sphere_uid)); },
+            ActionState::CompileShader => { println!("{}", generate_shader(&mut spheres)); },
+            ActionState::None          => {},
+            _ => {},            
         }
       
         let mut remove_id = -1;
@@ -450,8 +500,6 @@ fn main_gui() {
         if remove_id!=-1 {
             spheres.remove(remove_id as usize);
         }
-        
-        //grid_demo(&mut ctx, &mut media, &mut grid_state);
         
 
         encoder.clear(drawer.col.as_ref().unwrap(), [0.1f32, 0.2f32, 0.3f32, 1.0f32]);
@@ -490,158 +538,9 @@ fn free_type(_: &TextEdit, c: char) -> bool {
     c > '\u{0030}'
 }
 
-fn grid_demo(ctx: &mut Context, media: &mut Media, state: &mut GridState) {
-    ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
-    if ctx.begin(
-        nk_string!("Grid Nuklear Rust!"),
-        Rect { x: 600f32, y: 350f32, w: 275f32, h: 250f32 },
-        PanelFlags::Border as Flags | PanelFlags::Movable as Flags | PanelFlags::Title as Flags | PanelFlags::NoScrollbar as Flags,
-    ) {
-        ctx.style_set_font(media.font_atlas.font(media.font_18).unwrap().handle());
-        ctx.layout_row_dynamic(30f32, 2);
-        ctx.text("Free type:", TextAlignment::Right as Flags);
-        ctx.edit_string_custom_filter(EditType::Field as Flags, &mut state.text[3], &mut state.text_len[3], free_type);
-        ctx.text("Floating point:", TextAlignment::Right as Flags);
-        ctx.edit_string(EditType::Field as Flags, &mut state.text[0], &mut state.text_len[0], NK_FILTER_FLOAT);
-        ctx.text("Hexadecimal:", TextAlignment::Right as Flags);
-        ctx.edit_string(EditType::Field as Flags, &mut state.text[1], &mut state.text_len[1], NK_FILTER_HEX);
-        ctx.text("Binary:", TextAlignment::Right as Flags);
-        ctx.edit_string(EditType::Field as Flags, &mut state.text[2], &mut state.text_len[2], NK_FILTER_BINARY);
-        ctx.text("Checkbox:", TextAlignment::Right as Flags);
-        ctx.checkbox_text("Check me", &mut state.check);
-        ctx.text("Combobox:", TextAlignment::Right as Flags);
 
-        let widget_width = ctx.widget_width();
-        if ctx.combo_begin_text(state.items[state.selected_item], Vec2 { x: widget_width, y: 200f32 }) {
-            ctx.layout_row_dynamic(25f32, 1);
-            for i in 0..state.items.len() {
-                if ctx.combo_item_text(state.items[i], TextAlignment::Left as Flags) {
-                    state.selected_item = i;
-                }
-            }
-            ctx.combo_end();
-        }
-    }
-    ctx.end();
-    ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
-}
 
-fn button_demo(ctx: &mut Context, media: &mut Media, state: &mut ButtonState) {
-    ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
-
-    ctx.begin(
-        nk_string!("Button Nuklear Rust!"),
-        Rect { x: 50f32, y: 50f32, w: 255f32, h: 610f32 },
-        PanelFlags::Border as Flags | PanelFlags::Movable as Flags | PanelFlags::Title as Flags,
-    );
-
-    // ------------------------------------------------
-    //                  MENU
-    // ------------------------------------------------
-    ctx.menubar_begin();
-    {
-        // toolbar
-        ctx.layout_row_static(40f32, 40, 4);
-        if ctx.menu_begin_image(nk_string!("Music"), media.play.clone(), Vec2 { x: 110f32, y: 120f32 }) {
-            // settings
-            ctx.layout_row_dynamic(25f32, 1);
-            ctx.menu_item_image_text(media.play.clone(), "Play", TextAlignment::Right as Flags);
-            ctx.menu_item_image_text(media.stop.clone(), "Stop", TextAlignment::Right as Flags);
-            ctx.menu_item_image_text(media.pause.clone(), "Pause", TextAlignment::Right as Flags);
-            ctx.menu_item_image_text(media.next.clone(), "Next", TextAlignment::Right as Flags);
-            ctx.menu_item_image_text(media.prev.clone(), "Prev", TextAlignment::Right as Flags);
-            ctx.menu_end();
-        }
-        ctx.button_image(media.tools.clone());
-        ctx.button_image(media.cloud.clone());
-        ctx.button_image(media.pen.clone());
-    }
-    ctx.menubar_end();
-
-    // ------------------------------------------------
-    //                  BUTTON
-    // ------------------------------------------------
-    ui_header(ctx, media, "Push buttons");
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_text("Push me") {
-        println!("pushed!");
-    }
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_image_text(media.rocket.clone(), "Styled", TextAlignment::Centered as Flags) {
-        println!("rocket!");
-    }
-
-    // ------------------------------------------------
-    //                  REPEATER
-    // ------------------------------------------------
-    ui_header(ctx, media, "Repeater");
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_text("Press me") {
-        println!("pressed!");
-    }
-
-    // ------------------------------------------------
-    //                  TOGGLE
-    // ------------------------------------------------
-    ui_header(ctx, media, "Toggle buttons");
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_image_text(if state.toggle0 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
-        state.toggle0 = !state.toggle0;
-    }
-
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_image_text(if state.toggle1 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
-        state.toggle1 = !state.toggle1;
-    }
-
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_image_text(if state.toggle2 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
-        state.toggle2 = !state.toggle2;
-    }
-
-    // ------------------------------------------------
-    //                  RADIO
-    // ------------------------------------------------
-    ui_header(ctx, media, "Radio buttons");
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_symbol_text(if state.option == 0 { SymbolType::CircleOutline } else { SymbolType::CircleSolid }, "Select 1", TextAlignment::Left as Flags) {
-        state.option = 0;
-    }
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_symbol_text(if state.option == 1 { SymbolType::CircleOutline } else { SymbolType::CircleSolid }, "Select 2", TextAlignment::Left as Flags) {
-        state.option = 1;
-    }
-    ui_widget(ctx, media, 35f32);
-    if ctx.button_symbol_text(if state.option == 2 { SymbolType::CircleOutline } else { SymbolType::CircleSolid }, "Select 3", TextAlignment::Left as Flags) {
-        state.option = 2;
-    }
-
-    // ------------------------------------------------
-    //                  CONTEXTUAL
-    // ------------------------------------------------
-    ctx.style_set_font(media.font_atlas.font(media.font_18).unwrap().handle());
-    let bounds = ctx.window_get_bounds();
-    if ctx.contextual_begin(PanelFlags::NoScrollbar as Flags, Vec2 { x: 150f32, y: 300f32 }, bounds) {
-        ctx.layout_row_dynamic(30f32, 1);
-        if ctx.contextual_item_image_text(media.copy.clone(), "Clone", TextAlignment::Right as Flags) {
-            println!("pressed clone!");
-        }
-        if ctx.contextual_item_image_text(media.del.clone(), "Delete", TextAlignment::Right as Flags) {
-            println!("pressed delete!");
-        }
-        if ctx.contextual_item_image_text(media.convert.clone(), "Convert", TextAlignment::Right as Flags) {
-            println!("pressed convert!");
-        }
-        if ctx.contextual_item_image_text(media.edit.clone(), "Edit", TextAlignment::Right as Flags) {
-            println!("pressed edit!");
-        }
-        ctx.contextual_end();
-    }
-    ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
-    ctx.end();
-}
-
-fn basic_demo(ctx: &mut Context, media: &mut Media, state: &mut BasicState)->bool {
+fn control_panel(ctx: &mut Context, media: &mut Media, _state: &mut BasicState)->ActionState {
     ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
     ctx.begin(
         nk_string!("Control Panel"),
@@ -653,14 +552,18 @@ fn basic_demo(ctx: &mut Context, media: &mut Media, state: &mut BasicState)->boo
     ui_header(ctx, media, "Create");
     ui_widget(ctx, media, 35f32);
 
-    let mut add_sphere = false;
+    let mut action = ActionState::None;
 
     if ctx.button_text("Sphere") {
-        add_sphere = true;
+        action = ActionState::AddSphere;
+    }
+
+    if ctx.button_text("Compile") {
+        action = ActionState::CompileShader;
     }
     ctx.end();
 
-    add_sphere
+    action
 
 /*
     ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
