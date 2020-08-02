@@ -82,14 +82,14 @@ pub fn run(av: &ArgValues) -> error::Result<()> {
             }
 
             if av.andrun {
-                println!("elo2");
+                //println!("elo2");
                 loader::format_shader_src(&shadercode)
             } else {
-                println!("elo");
+                //println!("elo");
                 loader::load_fragment_shader(av)?
             }
         }
-        None => {println!("elo77"); loader::load_fragment_shader(av)?},
+        None => { /*println!("elo77");*/ loader::load_fragment_shader(av)?},
     };
     let (vert_src_buf, frag_src_buf) = (vert_src_buf.as_slice(), frag_src_buf.as_slice());
 

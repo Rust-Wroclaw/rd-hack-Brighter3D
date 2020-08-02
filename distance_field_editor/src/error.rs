@@ -5,14 +5,6 @@ use std::result;
 
 pub type Result<T> = result::Result<T, failure::Error>;
 
-// All unsupported uniforms
-pub static UNSUPPORTED_UNIFORMS: [&'static str; 5] = [
-    "iTimeDelta",
-    "iChannelTime",
-    "iChannelResolution",
-    "iDate",
-    "iSampleRate",
-];
 
 // Custom error for failing to load shaders
 #[derive(Fail, Debug)]
@@ -75,16 +67,4 @@ impl SaveShaderError {
     }
 }
 
-// Custom error for attempting to run a shader with unsupported uniforms
-#[derive(Fail, Debug)]
-#[fail(display = "The following uniforms are not supported: {:?}", unsupported_uniforms)]
-pub struct UnsupportedUniformError {
-    unsupported_uniforms: Vec<String>,
-}
-impl UnsupportedUniformError {
-    pub fn new(unsupported_uniforms: Vec<String>) -> UnsupportedUniformError {
-        UnsupportedUniformError {
-            unsupported_uniforms,
-        }
-    }
-}
+
