@@ -1,5 +1,5 @@
 use crate::argvalues::ArgValues;
-use crate::runner::TextureId;
+//use crate::runner::TextureId;
 
 //use crate::error::{self, UNSUPPORTED_UNIFORMS, LoadShaderError, FindExampleShaderError, UnsupportedUniformError};
 use crate::error::{self, LoadShaderError, FindExampleShaderError};
@@ -8,8 +8,8 @@ use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
 
-use gfx;
-use image;
+//use gfx;
+//use image;
 
 // Default shaders
 pub static DEFAULT_VERT_SRC_BUF: &'static [u8] = include_bytes!("../shaders/default.vert");
@@ -102,6 +102,7 @@ pub fn load_vertex_shader() -> Vec<u8> {
     DEFAULT_VERT_SRC_BUF.to_vec()
 }
 
+/*
 pub fn _load_texture<F, R>(_id: &TextureId, texpath: &Option<String>, factory: &mut F) ->
         error::Result<gfx::handle::ShaderResourceView<R, [f32; 4]>>
     where F: gfx::Factory<R>,
@@ -134,3 +135,12 @@ pub fn _load_texture<F, R>(_id: &TextureId, texpath: &Option<String>, factory: &
 
     Ok(view)
 }
+*/
+
+
+pub static ORG_FRAG_SRC_STR: &'static str  = include_str!("../shaders/template.frag");
+
+pub fn generate_shader_from_template(inner:String)->String {
+     String::from(ORG_FRAG_SRC_STR).replace("[GENERATED_SHADER_CODE]", &inner[..])  
+}
+

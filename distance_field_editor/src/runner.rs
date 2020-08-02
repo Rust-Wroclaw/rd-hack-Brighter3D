@@ -19,14 +19,14 @@ use std::sync::mpsc::{channel, TryRecvError};
 
 use std::time::{Duration, Instant};
 
-
+/*
 pub enum TextureId {
     ZERO,
     ONE,
     TWO,
     THREE,
 }
-
+*/
 type ColorFormat = gfx::format::Rgba8;
 type DepthFormat = gfx::format::DepthStencil;
 
@@ -71,27 +71,29 @@ pub fn run(av: &ArgValues) -> error::Result<()> {
 
     // Load vertex and fragment shaders into byte buffers
     let vert_src_buf = loader::load_vertex_shader();
-    let frag_src_buf = match av.getid {
+    let frag_src_buf = loader::load_fragment_shader(av)?;
+    
+    /*
+    match av.getid {
         Some(ref _id) => {
 
             let  shadercode = "empty";//..download::download(id)?;
 
             // Don't run default shader if downloading (with no --run flag)
             if av.getid.is_some() && !av.andrun {
-                println!("elo3");
                 return Ok(());
             }
 
             if av.andrun {
-                //println!("elo2");
+
                 loader::format_shader_src(&shadercode)
             } else {
-                //println!("elo");
+
                 loader::load_fragment_shader(av)?
             }
         }
         None => { /*println!("elo77");*/ loader::load_fragment_shader(av)?},
-    };
+    };*/
     let (vert_src_buf, frag_src_buf) = (vert_src_buf.as_slice(), frag_src_buf.as_slice());
 
     let (tx, rx) = channel();
@@ -142,7 +144,7 @@ pub fn run(av: &ArgValues) -> error::Result<()> {
     //let texture2 = loader::load_texture(&TextureId::TWO  , &av.texture2path, &mut factory)?;
     //let texture3 = loader::load_texture(&TextureId::THREE, &av.texture3path, &mut factory)?;
 
-    let sampler = factory.create_sampler_linear();
+   // let sampler = factory.create_sampler_linear();
 
     let mut data = pipe::Data {
         vbuf: vertex_buffer,
@@ -207,7 +209,7 @@ pub fn run(av: &ArgValues) -> error::Result<()> {
                         
                         //window.resize(PhysicalSize{width:new_width,height:new_height});
 
-                        width = new_width as f32;
+                        width  = new_width  as f32;
                         height = new_height as f32;
                     }
 

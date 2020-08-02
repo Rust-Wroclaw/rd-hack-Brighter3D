@@ -14,10 +14,12 @@ mod runner;
 mod loader;
 mod error;
 
+
 use std::string::String;
 use std::thread;
 use std::str;
 use argvalues::ArgValues;
+
 
 fn main_shader() {
     let _res = runner::run(&ArgValues::new());
@@ -358,7 +360,10 @@ fn main_gui() {
 
         match control_panel(&mut ctx, &mut media) {            
             ActionState::AddSphere     => { spheres.push(SphereState::new(&mut sphere_uid)); },
-            ActionState::CompileShader => { println!("{}", generate_shader(&mut spheres)); },
+            ActionState::CompileShader => { let inner_shader = generate_shader(&mut spheres); 
+                                            let s = loader::generate_shader_from_template(inner_shader);    
+                                            println!("{}",s); 
+                                          },
             ActionState::None          => {},
         }
       
