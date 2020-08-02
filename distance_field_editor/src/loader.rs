@@ -1,7 +1,8 @@
 use crate::argvalues::ArgValues;
 use crate::runner::TextureId;
 
-use crate::error::{self, UNSUPPORTED_UNIFORMS, LoadShaderError, FindExampleShaderError, UnsupportedUniformError};
+//use crate::error::{self, UNSUPPORTED_UNIFORMS, LoadShaderError, FindExampleShaderError, UnsupportedUniformError};
+use crate::error::{self, LoadShaderError, FindExampleShaderError};
 
 use std::fs::File;
 use std::io::{self, Read};
@@ -21,8 +22,8 @@ pub static DEFAULT_TEXTURE2_BUF: &'static [u8] = include_bytes!("../textures/03-
 pub static DEFAULT_TEXTURE3_BUF: &'static [u8] = include_bytes!("../textures/04-woodgrain.jpg");
 
 // Example shaders
-pub static EXAMPLE_SEASCAPE_STR: &'static str = include_str!("../examples/seascape.frag");
-pub static EXAMPLE_ELEMENTAL_RING_STR: &'static str = include_str!("../examples/elemental-ring.frag");
+//pub static EXAMPLE_SEASCAPE_STR: &'static str = include_str!("../examples/seascape.frag");
+//pub static EXAMPLE_ELEMENTAL_RING_STR: &'static str = include_str!("../examples/elemental-ring.frag");
 
 // Fragment shader prefix
 const PREFIX: &str = "
@@ -60,8 +61,8 @@ pub fn format_shader_src(src: &str) -> Vec<u8> {
 pub fn load_fragment_shader(av: &ArgValues) -> error::Result<Vec<u8>> {
     let frag_src_str = if let Some(ref example) = av.examplename {
         match example.as_ref() {
-            "seascape"       => EXAMPLE_SEASCAPE_STR.to_string(),
-            "elemental-ring" => EXAMPLE_ELEMENTAL_RING_STR.to_string(),
+            "sea"       => "".to_string(),//EXAMPLE_SEASCAPE_STR.to_string(),
+            //"elemental-ring" => EXAMPLE_ELEMENTAL_RING_STR.to_string(),
             _                => return Err(FindExampleShaderError::new(example.as_str()).into()),
         }
     } else {
@@ -84,16 +85,17 @@ pub fn load_fragment_shader(av: &ArgValues) -> error::Result<Vec<u8>> {
         }
     };
 
-    let unsupported_uniforms: Vec<String> = UNSUPPORTED_UNIFORMS.iter()
+/*    let unsupported_uniforms: Vec<String> = UNSUPPORTED_UNIFORMS.iter()
         .map(|s| s.to_string())
         .filter(|uu| frag_src_str.find(uu).is_some())
         .collect();
 
-    if unsupported_uniforms.is_empty() {
+    if unsupported_uniforms.is_empty() {*/
         Ok(format_shader_src(&frag_src_str))
+        /*
     } else {
         Err(UnsupportedUniformError::new(unsupported_uniforms).into())
-    }
+    }*/
 }
 
 pub fn load_vertex_shader() -> Vec<u8> {

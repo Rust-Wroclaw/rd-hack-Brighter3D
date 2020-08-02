@@ -1,12 +1,7 @@
-//#![cfg_attr(feature="clippy", feature(plugin))]
-//#![cfg_attr(feature="clippy", plugin(clippy))]
-
-//#[macro_use] extern crate clap;
 #[macro_use] extern crate gfx;
 extern crate gfx_window_glutin;
 extern crate glutin;
 extern crate image;
-//#[macro_use] extern crate log;
 extern crate env_logger;
 extern crate serde_json;
 extern crate notify;
@@ -19,10 +14,10 @@ mod runner;
 mod loader;
 mod error;
 
-use std::thread;
-//use std::time::Duration;
+use std::string::String;
 
-//mod download;
+use std::thread;
+use std::str;
 
 use argvalues::ArgValues;
 
@@ -31,23 +26,15 @@ fn main_shader() {
 } 
 
 fn main() {
-    thread::spawn(|| {
-        main_shader();
-    });
+    //thread::spawn(|| {
+      //  main_shader();
+    //});
+    main_shader();
     main_gui();
 }
 
-
-
-
 extern crate nuklear;
 extern crate nuklear_backend_gfx;
-
-//extern crate image;
-//
-//extern crate gfx;
-//extern crate gfx_window_glutin;
-//extern crate glutin;
 
 use nuklear::*;
 use nuklear_backend_gfx::{Drawer, GfxBackend};
@@ -83,6 +70,48 @@ struct ButtonState {
     toggle0: bool,
     toggle1: bool,
     toggle2: bool,
+}
+
+struct NuclearFloat {
+    text: [u8; 64],
+    text_len: i32,
+    val : f32,
+}
+
+impl NuclearFloat {
+    fn from_val(v:f32)->Self {
+        let     text_s = format!("{}",v);
+        let mut chars  = [0u8;64];
+        let mut len    = 0i32;
+
+        for c in text_s.chars()
+        {
+            chars[len as usize] = c as u8;
+            len+=1;
+        }
+        NuclearFloat{
+            text: chars,
+            text_len: len,
+            val: v,
+        }
+    }
+
+    fn update(&mut self)->f32
+    {        
+        let st   = str::from_utf8(&self.text).unwrap_or("");
+        self.val = std::string::String::from(st).parse::<f32>().unwrap_or(0.0);
+        self.val
+    }
+}
+
+struct SphereState {
+    red  : i32,
+    green: i32,
+    blue : i32,
+    x: NuclearFloat,
+    y: NuclearFloat,
+    z: NuclearFloat,
+    radius: NuclearFloat,
 }
 
 struct GridState {
@@ -264,6 +293,16 @@ fn main_gui() {
         toggle2: true,
     };
 
+    let mut sphere_state = SphereState {
+        red: 255,
+        green: 255,
+        blue: 0,    
+        x: NuclearFloat::from_val(0.0),
+        y: NuclearFloat::from_val(1.0),
+        z: NuclearFloat::from_val(2.0),
+        radius: NuclearFloat::from_val(10.0),
+    };
+
     let mut grid_state = GridState {
         text: [[0; 64]; 4],
         text_len: [0; 4],
@@ -283,6 +322,8 @@ fn main_gui() {
     config.set_global_alpha(1.0f32);
     config.set_shape_aa(AntiAliasing::On);
     config.set_line_aa(AntiAliasing::On);
+
+    let mut ii = 0i64;
 
     let mut closed = false;
     while !closed {
@@ -352,7 +393,12 @@ fn main_gui() {
         let scale = Vec2 { x: 1., y: 1. };
 
         basic_demo(&mut ctx, &mut media, &mut basic_state);
-        button_demo(&mut ctx, &mut media, &mut button_state);
+
+        //if (ii/100)%2==1 {
+        //button_demo(&mut ctx, &mut media, &mut button_state);
+        //}
+        sphere_demo(&mut ctx, &mut media, &mut sphere_state);
+        ii+=1;
         grid_demo(&mut ctx, &mut media, &mut grid_state);
 
         encoder.clear(drawer.col.as_ref().unwrap(), [0.1f32, 0.2f32, 0.3f32, 1.0f32]);
@@ -771,4 +817,198 @@ fn ui_piemenu(ctx: &mut Context, pos: Vec2, radius: f32, icons: &[Image]) -> i32
     ctx.style_mut().window_mut().set_fixed_background(background);
     ctx.style_mut().window_mut().set_border_color(border.clone());
     ret
+}
+
+
+fn sphere_demo(ctx: &mut Context, media: &mut Media, state: &mut SphereState) {
+    ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
+
+    ctx.begin(
+        nk_string!("Sphere"),
+        Rect { x: 50f32, y: 50f32, w: 255f32, h: 610f32 },
+        PanelFlags::Border as Flags | PanelFlags::Movable as Flags | PanelFlags::Title as Flags,
+
+        
+    );
+
+
+//    ctx.text("Position:", TextAlignment::Right as Flags);
+
+    // ------------------------------------------------
+    ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
+    ui_header(ctx, media, "Color");
+    //ui_widget(ctx, media, 5f32);
+   
+    //ui_widget(ctx, media, 35f32);
+    ctx.layout_row_dynamic(30f32, 2);
+
+    ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
+    ctx.label(nk_string!("Red:"), TextAlign::Right as Flags);
+    //ui_widget(ctx, media, 35f32);
+    ctx.slider_int(0,&mut state.red,255,1);
+    ctx.label(nk_string!("Green:"), TextAlign::Right as Flags);
+    //ui_widget(ctx, media, 35f32);
+    ctx.slider_int(0,&mut state.green,255,1);
+    ctx.label(nk_string!("Blue:"), TextAlign::Right as Flags);
+    //ui_widget(ctx, media, 35f32);
+    ctx.slider_int(0,&mut state.blue,255,1);
+
+    ctx.style_set_font(media.font_atlas.font(media.font_20).unwrap().handle());
+    ui_header(ctx, media, "Position");
+    //ui_widget(ctx, media, 25f32);
+
+    //ctx.style_set_font(media.font_atlas.font(media.font_18).unwrap().handle());
+    ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
+    ctx.layout_row_dynamic(30f32, 2);
+    ctx.text("X:", TextAlignment::Right as Flags);
+    ctx.edit_string(EditType::Field as Flags, &mut state.x.text, &mut state.x.text_len, NK_FILTER_FLOAT);
+    ctx.text("Y:", TextAlignment::Right as Flags);
+    ctx.edit_string(EditType::Field as Flags, &mut state.y.text, &mut state.y.text_len, NK_FILTER_FLOAT);
+    ctx.text("Z:", TextAlignment::Right as Flags);
+    ctx.edit_string(EditType::Field as Flags, &mut state.z.text, &mut state.z.text_len, NK_FILTER_FLOAT);
+    ctx.text("Radius:", TextAlignment::Right as Flags);
+    ctx.edit_string(EditType::Field as Flags, &mut state.radius.text, &mut state.radius.text_len, NK_FILTER_FLOAT);
+
+
+  //  if ctx.button_image_text(if state.toggle0 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
+    //    state.toggle0 = !state.toggle0;
+    //}
+
+
+    
+
+              /* execute node window */
+              /*
+              if (nk_group_begin(ctx, it->name, NK_WINDOW_MOVABLE|NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_BORDER|NK_WINDOW_TITLE))
+              {
+                  /* always have last selected node on top */
+
+                  node = nk_window_get_panel(ctx);
+                  if (nk_input_mouse_clicked(in, NK_BUTTON_LEFT, node->bounds) &&
+                      (!(it->prev && nk_input_mouse_clicked(in, NK_BUTTON_LEFT,
+                      nk_layout_space_rect_to_screen(ctx, node->bounds)))) &&
+                      nodedit->end != it)
+                  {
+                      updated = it;
+                  }
+
+                  /* ================= NODE CONTENT =====================*/
+                  nk_layout_row_dynamic(ctx, 25, 1);
+                  nk_button_color(ctx, it->color);
+                  it->color.r = (nk_byte)nk_propertyi(ctx, "#R:", 0, it->color.r, 255, 1,1);
+                  it->color.g = (nk_byte)nk_propertyi(ctx, "#G:", 0, it->color.g, 255, 1,1);
+                  it->color.b = (nk_byte)nk_propertyi(ctx, "#B:", 0, it->color.b, 255, 1,1);
+                  it->color.a = (nk_byte)nk_propertyi(ctx, "#A:", 0, it->color.a, 255, 1,1);
+                  /* ====================================================*/
+                  nk_group_end(ctx);
+              } */   
+
+    // ------------------------------------------------
+    //                  MENU
+    // ------------------------------------------------
+    /*
+    ctx.menubar_begin();
+    {
+        // toolbar
+        ctx.layout_row_static(40f32, 40, 4);
+        if ctx.menu_begin_image(nk_string!("Music"), media.play.clone(), Vec2 { x: 110f32, y: 120f32 }) {
+            // settings
+            ctx.layout_row_dynamic(25f32, 1);
+            ctx.menu_item_image_text(media.play.clone(), "Play", TextAlignment::Right as Flags);
+            ctx.menu_item_image_text(media.stop.clone(), "Stop", TextAlignment::Right as Flags);
+            ctx.menu_item_image_text(media.pause.clone(), "Pause", TextAlignment::Right as Flags);
+            ctx.menu_item_image_text(media.next.clone(), "Next", TextAlignment::Right as Flags);
+            ctx.menu_item_image_text(media.prev.clone(), "Prev", TextAlignment::Right as Flags);
+            ctx.menu_end();
+        }
+        ctx.button_image(media.tools.clone());
+        ctx.button_image(media.cloud.clone());
+        ctx.button_image(media.pen.clone());
+    }
+    ctx.menubar_end();
+*/
+    // ------------------------------------------------
+    //                  BUTTON
+    // ------------------------------------------------
+
+    /*
+    ui_header(ctx, media, "Push buttons");
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_text("Push me") {
+        println!("pushed!");
+    }
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_image_text(media.rocket.clone(), "Styled", TextAlignment::Centered as Flags) {
+        println!("rocket!");
+    }
+
+    // ------------------------------------------------
+    //                  REPEATER
+    // ------------------------------------------------
+    ui_header(ctx, media, "Repeater");
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_text("Press me") {
+        println!("pressed!");
+    }
+
+    // ------------------------------------------------
+    //                  TOGGLE
+    // ------------------------------------------------
+    ui_header(ctx, media, "Toggle buttons");
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_image_text(if state.toggle0 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
+        state.toggle0 = !state.toggle0;
+    }
+
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_image_text(if state.toggle1 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
+        state.toggle1 = !state.toggle1;
+    }
+
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_image_text(if state.toggle2 { media.checked.clone() } else { media.unchecked.clone() }, "Toggle", TextAlignment::Left as Flags) {
+        state.toggle2 = !state.toggle2;
+    }
+
+    // ------------------------------------------------
+    //                  RADIO
+    // ------------------------------------------------
+    ui_header(ctx, media, "Radio buttons");
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_symbol_text(if state.option == 0 { SymbolType::CircleOutline } else { SymbolType::CircleSolid }, "Select 1", TextAlignment::Left as Flags) {
+        state.option = 0;
+    }
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_symbol_text(if state.option == 1 { SymbolType::CircleOutline } else { SymbolType::CircleSolid }, "Select 2", TextAlignment::Left as Flags) {
+        state.option = 1;
+    }
+    ui_widget(ctx, media, 35f32);
+    if ctx.button_symbol_text(if state.option == 2 { SymbolType::CircleOutline } else { SymbolType::CircleSolid }, "Select 3", TextAlignment::Left as Flags) {
+        state.option = 2;
+    }
+
+    // ------------------------------------------------
+    //                  CONTEXTUAL
+    // ------------------------------------------------
+    ctx.style_set_font(media.font_atlas.font(media.font_18).unwrap().handle());
+    let bounds = ctx.window_get_bounds();
+    if ctx.contextual_begin(PanelFlags::NoScrollbar as Flags, Vec2 { x: 150f32, y: 300f32 }, bounds) {
+        ctx.layout_row_dynamic(30f32, 1);
+        if ctx.contextual_item_image_text(media.copy.clone(), "Clone", TextAlignment::Right as Flags) {
+            println!("pressed clone!");
+        }
+        if ctx.contextual_item_image_text(media.del.clone(), "Delete", TextAlignment::Right as Flags) {
+            println!("pressed delete!");
+        }
+        if ctx.contextual_item_image_text(media.convert.clone(), "Convert", TextAlignment::Right as Flags) {
+            println!("pressed convert!");
+        }
+        if ctx.contextual_item_image_text(media.edit.clone(), "Edit", TextAlignment::Right as Flags) {
+            println!("pressed edit!");
+        }
+        ctx.contextual_end();
+    }
+    */
+    ctx.style_set_font(media.font_atlas.font(media.font_14).unwrap().handle());
+    ctx.end();
 }
