@@ -71,9 +71,8 @@ pub fn load_fragment_shader(av: &ArgValues) -> error::Result<Vec<u8>> {
             Some(ref shaderpath) => {
                 let mut frag_src_str = String::new();
 
-                println!("lol1");
+                //println!("lol1");
                 File::open(&Path::new(&shaderpath)).or_else(|err| {
-                    println!("lol2");
                     return_load_shader_error(shaderpath, err)
                 })?.read_to_string(&mut frag_src_str).or_else(|err| {
                     return_load_shader_error(shaderpath, err)
@@ -82,7 +81,6 @@ pub fn load_fragment_shader(av: &ArgValues) -> error::Result<Vec<u8>> {
                 frag_src_str
             },
             None => {
-                println!("lol");
                 String::from(DEFAULT_FRAG_SRC_STR)
             }
         }
@@ -161,3 +159,15 @@ pub fn save_to_file(file_path:&str,shader:String) -> std::io::Result<()> {
     //file.write_all(&shader.bytes()[..])?;
     Ok(())
 }
+
+/*
+        // float code = m-100.0;
+//        float rr = 255.0;
+//mod(code/65536.0.0,256.0);
+//      float gg = 0.0;
+//mod(code/256.0    ,256.0);
+    //    float bb = 0.0;
+//mod(code          ,256.0);
+      //  col = vec3(rr/256.0,gg/256.0,bb/256.0);
+
+*/

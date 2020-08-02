@@ -318,8 +318,13 @@ vec2 map( in vec3 pos )
     vec2 res = vec2( 1e10, 0.0 );
 
     {
-      res = opU( res, vec2( sdSphere(    pos-vec3(-2.0,0.25, 0.0), 0.25 ), 26.9 ) );
+ res = opU( res, vec2( sdSphere(    pos-vec3(0,0.3,0.3), 0.2 ), 16638924 ) );
+ res = opU( res, vec2( sdSphere(    pos-vec3(0,0.7,0), 0.4 ), 16777315 ) );
+
+
+/*      res = opU( res, vec2( sdSphere(    pos-vec3(-2.0,0.25, 0.0), 0.25 ), 26.9 ) );
       res = opU( res, vec2( sdSphere(    pos-vec3(-2.0,0.35, 0.0), 0.25 ), 20.9 ) );
+*/
     }
 /*    
     {
@@ -386,7 +391,7 @@ vec2 raycast( in vec3 ro, in vec3 rd )
     //else return res;
     
     // raymarch primitives   
-    vec2 tb = iBox( ro-vec3(0.0,0.4,-0.5), rd, vec3(2.5,0.41,3.0) );
+    vec2 tb = iBox( ro-vec3(0.0,0.4,-0.5), rd, vec3(12.5,10.41,30.0) );
     if( tb.x<tb.y && tb.y>0.0 && tb.x<tmax)
     {
         //return vec2(tb.x,2.0);
@@ -492,7 +497,19 @@ vec3 render( in vec3 ro, in vec3 rd, in vec3 rdx, in vec3 rdy )
         vec3 ref = reflect( rd, nor );
         
         // material        
-        col = 0.2 + 0.2*sin( m*2.0 + vec3(0.0,1.0,2.0) );
+
+//        col = 0.2 + 0.2*sin( m*2.0 + vec3(0.0,1.0,2.0) );
+//     col = 0.2 + 0.2*sin( m*2.0 + vec3(0.0,1.0,2.0) );
+
+        float code = m-100.0;
+
+        float rr = float(int(code/65536.0)%256);
+        float gg = float(int(code/256.0)%256);
+        float bb = float(int(code)%256);
+
+        col = vec3(rr/256.0,gg/256.0,bb/256.0);
+
+
         float ks = 1.0;
         
         if( m<1.5 )

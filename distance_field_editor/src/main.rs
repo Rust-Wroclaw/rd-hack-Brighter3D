@@ -127,9 +127,9 @@ impl NuclearFloat {
     {        
         let st   = str::from_utf8(&self.text).unwrap_or("");
         let stri = std::string::String::from(st);
-        let mut i=0;
-        while self.text[i]!=0 {i+=1;}
-        let vv = stri[..i].parse::<f32>().unwrap();                            
+        //let mut i=0;
+        //while self.text[i]!=0 {i+=1;}
+        let vv = stri[..self.text_len as usize].parse::<f32>().unwrap();                            
         self.val = vv;
         self.val
     }
@@ -175,11 +175,13 @@ impl SphereState {
 
     fn get_shader(&self)->String {
 
-        format!(" res = opU( res, vec2( sdSphere(    pos-vec3({},{},{}), {} ), 20.9 ) );\n",
-                self.x.val(),
-                self.y.val(),
-                self.z.val(),
-                self.radius.val())
+        let code:i32 = 256*256*self.red + 256*self.green + self.blue;
+        format!(" res = opU( res, vec2( sdSphere(    pos-vec3({},{},{}), {} ), {} ) );\n",
+                self.x.val()*0.1,
+                self.y.val()*0.1,
+                self.z.val()*0.1,
+                self.radius.val()*0.1*0.5,
+                code as f32+100.0)
     
     }
 }
@@ -410,7 +412,7 @@ fn main_gui() {
             ActionState::AddSphere     => { spheres.push(SphereState::new(&mut sphere_uid)); },
             ActionState::CompileShader => { let inner_shader = generate_shader(&mut spheres); 
                                             let s = loader::generate_shader_from_template(inner_shader);    
-                                            let _res = loader::save_to_file("./shaders/default2.frag", s);
+                                            let _res = loader::save_to_file("./shaders/default.frag", s);
                                             
                                             //println!("{}",s); 
                                           },
